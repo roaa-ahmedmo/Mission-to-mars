@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission to Mars – The Human Survival Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        .glow {
+            text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px #ffffff;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #ffffff; }
+            to { text-shadow: 0 0 20px #ffffff, 0 0 30px #ffffff; }
+        }
+        .screen {
+            display: none;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .visible {
+            display: block;
+        }
+        button {
+            transition: all 0.3s ease;
+            background: linear-gradient(90deg, #ff006e, #8338ec);
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #ff006e;
+        }
+        .resource-bar {
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+        }
+        .resource-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .event-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 30px #00ff00;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center">
+    <!-- Welcome Screen -->
+    <div id="welcome" class="screen visible text-center">
+        <h1 class="text-5xl font-bold mb-8 glow">Mission to Mars</h1>
+        <h2 class="text-2xl mb-8 text-blue-300">The Human Survival Simulator</h2>
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/2893d714-0a2a-4f9f-89f9-010c56ff8da7.png" alt="Futuristic spaceship launching from Earth towards Mars with glowing engines and stars in the background, dramatic space scene" class="mb-8 rounded-lg shadow-lg" />
+        <p class="mb-8 text-lg">Embark on a virtual journey to Mars. Make critical decisions, face challenges, and build a sustainable colony. NASA fact: Mars' thin atmosphere means we need closed-loop life support systems for oxygen and water.</p>
+        <button onclick="startGame()" class="px-6 py-3 text-white font-bold rounded-lg">Begin Simulation</button>
+    </div>
+
+    <!-- Selection Screen -->
+    <div id="selection" class="screen">
+        <h2 class="text-3xl font-bold mb-8 text-center glow">Prepare Your Mission</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d790f910-1f62-4901-9da6-d9b7b91e0913.png" alt="Advanced spaceship interior with control panels and crew seats, high-tech futuristic design" class="mb-4 rounded-lg" />
+                <h3 class="text-xl mb-4">Choose Spaceship</h3>
+                <select id="ship" class="block w-full p-2 bg-gray-800 text-white rounded">
+                    <option value="basic">Basic Rocket (-50 fuel, +20 crew morale)</option>
+                    <option value="advanced">Advanced Explorer (-100 fuel, +50 efficiency, NASA fact: Orion spacecraft uses solar panels for energy)</option>
+                </select>
+            </div>
+            <div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4f58f763-315b-4aa5-8c21-7558a912f08b.png" alt="Diversely skilled crew members in space suits posing confidently, teamwork theme" class="mb-4 rounded-lg" />
+                <h3 class="text-xl mb-4">Choose Crew</h3>
+                <select id="crew" class="block w-full p-2 bg-gray-800 text-white rounded">
+                    <option value="small">Small Team (4 members, +30 oxygen, easy) NASA fact: Small crews reduce life support needs</option>
+                    <option value="large">Large Team (8 members, -20 oxygen per event)</option>
+                </select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d0e6bac5-abe7-4e15-8ad6-63bf33f97654.png" alt="Fuel tanks and propulsion systems visualized in schematic form, energy efficiency focus" class="mb-4 rounded-lg" />
+                <h3 class="text-xl mb-4">Choose Fuel</h3>
+                <select id="fuel" class="block w-full p-2 bg-gray-800 text-white rounded">
+                    <option value="low">Low (100 units, basic range)</option>
+                    <option value="high">High (200 units, +50 efficiency in navigation)</option>
+                </select>
+            </div>
+            <div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/0b01865f-1bf0-43e6-b0b3-5c3ceec580d1.png" alt="Packed food supplies and hydroponic modules for sustainable nutrition, space food technology" class="mb-4 rounded-lg" />
+                <h3 class="text-xl mb-4">Choose Food</h3>
+                <select id="food" class="block w-full p-2 bg-gray-800 text-white rounded">
+                    <option value="basic">Basic Supplies (100 units, +10 per week)</option>
+                    <option value="hydro">Hydroponic System (150 units, self-sustaining, NASA fact: Hydroponics recycles water)</option>
+                </select>
+            </div>
+        </div>
+        <div class="text-center">
+            <button onclick="toSimulation()" class="px-6 py-3 text-white font-bold rounded-lg">Launch to Space</button>
+        </div>
+    </div>
+
+    <!-- Simulation Screen -->
+    <div id="simulation" class="screen">
+        <h2 class="text-3xl font-bold mb-8 text-center glow">Space Journey Events</h2>
+        <div id="event-display" class="bg-gray-800 p-6 rounded-lg mb-8">
+            <p id="event-text">Navigating to Mars...</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="text-center">
+                <h4>Oxygen</h4>
+                <div class="resource-bar">
+                    <div id="oxygen-bar" class="resource-fill bg-blue-500" style="width: 100%"></div>
+                </div>
+                <p id="oxygen-val">100%</p>
+            </div>
+            <div class="text-center">
+                <h4>Water</h4>
+                <div class="resource-bar">
+                    <div id="water-bar" class="resource-fill bg-cyan-500" style="width: 100%"></div>
+                </div>
+                <p id="water-val">100%</p>
+            </div>
+            <div class="text-center">
+                <h4>Food</h4>
+                <div class="resource-bar">
+                    <div id="food-bar" class="resource-fill bg-green-500" style="width: 100%"></div>
+                </div>
+                <p id="food-val">100%</p>
+            </div>
+            <div class="text-center">
+                <h4>Energy</h4>
+                <div class="resource-bar">
+                    <div id="energy-bar" class="resource-fill bg-yellow-500" style="width: 100%"></div>
+                </div>
+                <p id="energy-val">100%</p>
+            </div>
+        </div>
+        <div class="text-center">
+            <button id="next-event" onclick="triggerEvent()" class="px-6 py-3 text-white font-bold rounded-lg">Face Next Challenge</button>
+            <button onclick="toLanding()" class="px-6 py-3 text-white font-bold rounded-lg ml-4">Attempt Landing (Requires 50% fuel)</button>
+        </div>
+    </div>
+
+    <!-- Landing Challenge Screen -->
+    <div id="landing" class="screen text-center">
+        <h2 class="text-3xl font-bold mb-8 glow">Mars Landing Challenge</h2>
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/a050bf61-dfec-40df-9c81-82920c60c224.png" alt="Mars surface with dusty red terrain, potential landing hazards like craters and boulders" class="mb-8 rounded-lg shadow-lg" />
+        <p class="mb-8 text-lg">NASA fact: Mars' gravity is 38% of Earth's, allowing steeper slopes for landing sites.</p>
+        <p id="landing-prompt" class="mb-8">Choose landing site: Flat Plain (Safe but rocky) or Crater Edge (High views but risky).</p>
+        <div class="space-x-4">
+            <button onclick="chooseLanding('safe')" class="px-6 py-3 text-white font-bold rounded-lg">Flat Plain</button>
+            <button onclick="chooseLanding('risky')" class="px-6 py-3 text-white font-bold rounded-lg">Crater Edge</button>
+        </div>
+    </div>
+
+    <!-- Colony Building Screen -->
+    <div id="colony" class="screen">
+        <h2 class="text-3xl font-bold mb-8 text-center glow">Build Your Mars Colony</h2>
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d45a67aa-1e2f-4f90-97a7-b0d976443c53.png" alt="Modular habitat domes on Mars surface with solar panels and extracted resources, human outpost theme" class="mb-8 rounded-lg shadow-lg" />
+        <p class="mb-8 text-lg text-center">NASA fact: In-situ resource utilization (ISRU) will extract water from Martian soil to support long-term missions.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="text-center">
+                <h4>Oxygen Recycler</h4>
+                <button onclick="adjust('oxygen', 10)" class="px-4 py-2 text-white font-bold rounded bg-green-600">+</button>
+                <button onclick="adjust('oxygen', -10)" class="px-4 py-2 text-white font-bold rounded bg-red-600 ml-2">-</button>
+            </div>
+            <div class="text-center">
+                <h4>Water Extractor</h4>
+                <button onclick="adjust('water', 10)" class="px-4 py-2 text-white font-bold rounded bg-blue-600">+</button>
+                <button onclick="adjust('water', -10)" class="px-4 py-2 text-white font-bold rounded bg-red-600 ml-2">-</button>
+            </div>
+            <div class="text-center">
+                <h4>Food Printer</h4>
+                <button onclick="adjust('food', 10)" class="px-4 py-2 text-white font-bold rounded bg-purple-600">+</button>
+                <button onclick="adjust('food', -10)" class="px-4 py-2 text-white font-bold rounded bg-red-600 ml-2">-</button>
+            </div>
+            <div class="text-center">
+                <h4>Energy Solar</h4>
+                <button onclick="adjust('energy', 10)" class="px-4 py-2 text-white font-bold rounded bg-yellow-600">+</button>
+                <button onclick="adjust('energy', -10)" class="px-4 py-2 text-white font-bold rounded bg-red-600 ml-2">-</button>
+            </div>
+        </div>
+        <div class="text-center">
+            <button onclick="toReport()" class="px-6 py-3 text-white font-bold rounded-lg">Complete Mission</button>
+        </div>
+    </div>
+
+    <!-- Report Screen -->
+    <div id="report" class="screen text-center">
+        <h2 class="text-3xl font-bold mb-8 glow">Mission Report</h2>
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/5b5c942c-5942-4574-b39d-b38dd4bccbb3.png" alt="Martian horizon at sunset with Earth visible as bright blue dot in distance, reflective and hopeful scene" class="mb-8 rounded-lg shadow-lg" />
+        <p id="score" class="text-2xl mb-4">Survival Score: 0</p>
+        <p class="text-lg mb-8 text-green-300">“Every step teaches us how to reach the stars.”</p>
+        <button onclick="restart()" class="px-6 py-3 text-white font-bold rounded-lg">Restart Simulation</button>
+    </div>
+
+    <script>
+        let resources = { oxygen: 100, water: 100, food: 100, energy: 100 };
+        let choices = {};
+        let eventIndex = 0;
+        const events = [
+            { text: "Solar flare detected! Lose 20 energy or 10 oxygen.", choices: ["Sacrifice energy", "Sacrifice oxygen"], effects: [{ oxygen: -10 }, { energy: -20 }] },
+            { text: "Ethical dilemma: Share food with alien life (if found) or save for crew?", choices: ["Share", "Save"], effects: [{ food: -20, morale: 10 }, { food: 10 }] },
+            { text: "NASA fact: Comet hit Mars, reducing water by dust storms. Handle it.", choices: ["Recycle", "Wait"], effects: [{ water: -15 }, { water: -10 }] }
+        ];
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
+            document.getElementById(id).classList.add('visible');
+        }
+
+        function startGame() {
+            showScreen('selection');
+        }
+
+        function toSimulation() {
+            choices.ship = document.getElementById('ship').value;
+            choices.crew = document.getElementById('crew').value;
+            choices.fuel = document.getElementById('fuel').value;
+            choices.food = document.getElementById('food').value;
+            // Adjust starting resources based on choices
+            if (choices.ship === 'advanced') resources.energy += 20;
+            if (choices.crew === 'large') resources.oxygen -= 20;
+            if (choices.fuel === 'high') resources.energy += 10;
+            if (choices.food === 'hydro') resources.water += 10;
+            updateResources();
+            showScreen('simulation');
+        }
+
+        function updateResources() {
+            Object.keys(resources).forEach(key => {
+                const bar = document.getElementById(key + '-bar');
+                const val = document.getElementById(key + '-val');
+                if (bar && val) {
+                    bar.style.width = Math.max(0, resources[key]) + '%';
+                    val.textContent = resources[key] + '%';
+                }
+            });
+        }
+
+        function triggerEvent() {
+            if (eventIndex < events.length) {
+                const event = events[eventIndex];
+                document.getElementById('event-text').innerHTML = event.text + '<br><button onclick="chooseChoice(0, ' + eventIndex + ')">' + event.choices[0] + '</button> <button onclick="chooseChoice(1, ' + eventIndex + ')">' + event.choices[1] + '</button>';
+                eventIndex++;
+            } else {
+                alert('Journey complete! Preparing for landing.');
+            }
+        }
+
+        function chooseChoice(choiceIndex, eIndex) {
+            const event = events[eIndex];
+            const effect = event.effects[choiceIndex];
+            Object.keys(effect).forEach(key => {
+                if (key in resources) resources[key] = Math.max(0, resources[key] + effect[key]);
+            });
+            updateResources();
+            document.getElementById('event-text').innerHTML = 'Decision made. Resources updated.';
+        }
+
+        function toLanding() {
+            if (resources.energy < 50) {
+                alert('Not enough energy for landing! Fuel up more.');
+                return;
+            }
+            showScreen('landing');
+        }
+
+        function chooseLanding(type) {
+            if (type === 'risky' && Math.random() > 0.5) {
+                resources.energy -= 30;
+                alert('Landing risk: Damaged solar panels! Lost energy.');
+            } else {
+                alert('Successful landing! Welcome to Mars.');
+            }
+            updateResources();
+            showScreen('colony');
+        }
+
+        function adjust(resource, amount) {
+            resources[resource] = Math.max(0, Math.min(100, resources[resource] + amount));
+            updateResources();
+        }
+
+        function toReport() {
+            const score = (resources.oxygen + resources.water + resources.food + resources.energy) / 4;
+            document.getElementById('score').textContent = 'Survival Score: ' + Math.round(score);
+            showScreen('report');
+        }
+
+        function restart() {
+            resources = { oxygen: 100, water: 100, food: 100, energy: 100 };
+            eventIndex = 0;
+            showScreen('welcome');
+        }
+    </script>
+</body>
+</html>
+</content>
+</create_file>
